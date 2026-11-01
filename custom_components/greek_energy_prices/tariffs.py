@@ -70,8 +70,8 @@ PROFILES: dict[str, SupplierProfile] = {
             source="https://www.protergia.gr/en/home/electric-energy/dynamic-one-home/",
             as_of="2026-11-01",
             notes=(
-                "Β = 1,2 και βασική τιμή 35 (υποθέτουμε €/MWh) στον πίνακα "
-                "Ιουνίου 2026, πάγιο 9,90 €/μήνα. Επιβεβαιώστε τη βασική τιμή."
+                "1,2 × ΤΕΑ ώρας + 0,035 €/kWh, πάγιο 9,90 €/μήνα. Επιβεβαιώθηκε "
+                "με τις ωριαίες τιμές του Dynamic Home Check Tool (Σεπτ. 2026)."
             ),
         ),
         SupplierProfile(
