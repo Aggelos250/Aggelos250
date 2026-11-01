@@ -12,15 +12,23 @@ from .entsoe import PricePoint
 
 @dataclass(frozen=True, slots=True)
 class TariffSettings:
-    """How a retail price is derived from the wholesale price (all €/kWh)."""
+    """How a retail price is derived from the wholesale price (all €/kWh).
+
+    retail = (multiplier × wholesale + supplier_margin + other_charges) × (1 + VAT)
+    """
 
     supplier_margin: float = 0.0
     other_charges: float = 0.0
     vat_percent: float = 6.0
+    wholesale_multiplier: float = 1.0
+
+    def supply(self, wholesale_eur_kwh: float) -> float:
+        """Supplier's energy price (B × ΤΕΑ + A), excluding VAT."""
+        return self.wholesale_multiplier * wholesale_eur_kwh + self.supplier_margin
 
     def retail(self, wholesale_eur_kwh: float) -> float:
         """Final price per kWh paid by the household."""
-        net = wholesale_eur_kwh + self.supplier_margin + self.other_charges
+        net = self.supply(wholesale_eur_kwh) + self.other_charges
         return net * (1 + self.vat_percent / 100)
 
 
@@ -41,6 +49,27 @@ class PriceInterval:
             "price": round(self.retail, 5),
             "wholesale": round(self.wholesale, 5),
         }
+
+
+def average_hourly(points: list[PricePoint]) -> list[PricePoint]:
+    """Collapse sub-hourly points into hourly averages (ΤΕΑ ώρας).
+
+    Hours are aligned to UTC hour boundaries, which coincide with Athens hours.
+    Partial hours are averaged over the points that exist.
+    """
+    buckets: dict[datetime, list[PricePoint]] = {}
+    for point in points:
+        hour = point.start.replace(minute=0, second=0, microsecond=0)
+        buckets.setdefault(hour, []).append(point)
+    result = []
+    for hour, members in sorted(buckets.items()):
+        seconds = sum((m.end - m.start).total_seconds() for m in members)
+        price = (
+            sum(m.price_eur_mwh * (m.end - m.start).total_seconds() for m in members)
+            / seconds
+        )
+        result.append(PricePoint(hour, hour + timedelta(hours=1), price))
+    return result
 
 
 def build_intervals(

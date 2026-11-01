@@ -3,19 +3,13 @@
     "step": {
       "user": {
         "title": "Greek electricity prices",
-        "description": "Day-ahead prices for Greece from the ENTSO-E Transparency Platform. Request a free API token at transparency.entsoe.eu (My Account Settings → Web API Security Token).",
+        "description": "Day-ahead prices for Greece from the ENTSO-E Transparency Platform. Request a free API token at transparency.entsoe.eu (My Account Settings → Web API Security Token), then choose your supplier's dynamic product.",
         "data": {
           "api_key": "ENTSO-E API token",
-          "supplier_margin": "Supplier margin",
-          "other_charges": "Other charges",
-          "vat": "VAT",
-          "cheap_hours": "Cheap hours"
+          "profile": "Supplier / product"
         },
         "data_description": {
-          "supplier_margin": "Your supplier's margin on top of the wholesale price (€/kWh), as stated in your contract.",
-          "other_charges": "Regulated per-kWh charges (network, ΥΚΩ, ΕΤΜΕΑΡ, ΕΦΚ, ...) from your bill.",
-          "vat": "VAT percentage (6% for electricity in Greece).",
-          "cheap_hours": "How many hours count as cheap, and the length of the cheapest contiguous window."
+          "profile": "Pre-fills the supplier's published pricing. Choose “Other / manual” to enter it yourself."
         }
       },
       "reauth_confirm": {
@@ -23,6 +17,26 @@
         "description": "The ENTSO-E token was rejected. Enter a new one.",
         "data": {
           "api_key": "ENTSO-E API token"
+        }
+      },
+      "tariff": {
+        "title": "Tariff",
+        "description": "**{profile}**\n\nMonthly fixed fee: {monthly_fee} € (shown as an attribute, not included in the €/kWh price).\nValues checked: {as_of} – source: {source}\n\n{notes}\n\nSuppliers change their prices: compare with your contract and correct if needed.",
+        "data": {
+          "wholesale_multiplier": "Wholesale coefficient (B)",
+          "supplier_margin": "Supplier base price (A)",
+          "other_charges": "Other charges",
+          "vat": "VAT",
+          "cheap_hours": "Cheap hours",
+          "hourly_prices": "Use hourly ΤΕΑ"
+        },
+        "data_description": {
+          "wholesale_multiplier": "Multiplier applied to the day-ahead price ΤΕΑ (usually 1.19–1.2, the low-voltage loss factor). Use 1 if your contract has none.",
+          "supplier_margin": "Fixed €/kWh the supplier adds: supply price = B × ΤΕΑ + A.",
+          "other_charges": "Regulated per-kWh charges (network, ΥΚΩ, ΕΤΜΕΑΡ, ΕΦΚ, ...) from your bill.",
+          "vat": "VAT percentage (6% for electricity in Greece).",
+          "cheap_hours": "How many hours count as cheap, and the length of the cheapest contiguous window.",
+          "hourly_prices": "Greek dynamic contracts are priced on the hourly average of the 15-minute market prices. Turn off to use 15-minute prices."
         }
       }
     },
@@ -39,18 +53,32 @@
   "options": {
     "step": {
       "init": {
-        "title": "Tariff settings",
+        "title": "Supplier",
         "data": {
-          "supplier_margin": "Supplier margin",
-          "other_charges": "Other charges",
-          "vat": "VAT",
-          "cheap_hours": "Cheap hours"
+          "profile": "Supplier / product"
         },
         "data_description": {
-          "supplier_margin": "Your supplier's margin on top of the wholesale price (€/kWh), as stated in your contract.",
+          "profile": "Pre-fills the supplier's published pricing. Choose “Other / manual” to enter it yourself."
+        }
+      },
+      "tariff": {
+        "title": "Tariff",
+        "description": "**{profile}**\n\nMonthly fixed fee: {monthly_fee} € (shown as an attribute, not included in the €/kWh price).\nValues checked: {as_of} – source: {source}\n\n{notes}\n\nSuppliers change their prices: compare with your contract and correct if needed.",
+        "data": {
+          "wholesale_multiplier": "Wholesale coefficient (B)",
+          "supplier_margin": "Supplier base price (A)",
+          "other_charges": "Other charges",
+          "vat": "VAT",
+          "cheap_hours": "Cheap hours",
+          "hourly_prices": "Use hourly ΤΕΑ"
+        },
+        "data_description": {
+          "wholesale_multiplier": "Multiplier applied to the day-ahead price ΤΕΑ (usually 1.19–1.2, the low-voltage loss factor). Use 1 if your contract has none.",
+          "supplier_margin": "Fixed €/kWh the supplier adds: supply price = B × ΤΕΑ + A.",
           "other_charges": "Regulated per-kWh charges (network, ΥΚΩ, ΕΤΜΕΑΡ, ΕΦΚ, ...) from your bill.",
           "vat": "VAT percentage (6% for electricity in Greece).",
-          "cheap_hours": "How many hours count as cheap, and the length of the cheapest contiguous window."
+          "cheap_hours": "How many hours count as cheap, and the length of the cheapest contiguous window.",
+          "hourly_prices": "Greek dynamic contracts are priced on the hourly average of the 15-minute market prices. Turn off to use 15-minute prices."
         }
       }
     }
@@ -103,6 +131,16 @@
     },
     "no_data": {
       "message": "ENTSO-E returned no prices for Greece."
+    }
+  },
+  "selector": {
+    "profile": {
+      "options": {
+        "dei_myhome_dynamic": "ΔΕΗ – myHome Dynamic",
+        "protergia_dynamic_one_home": "Protergia – Dynamic One Home",
+        "zenith_power_home_flow": "ZeniΘ – Power Home Flow",
+        "custom": "Other / manual"
+      }
     }
   }
 }

@@ -55,10 +55,27 @@ def _current_attrs(data: PriceData, now: datetime) -> dict[str, Any]:
         "tomorrow": [i.as_dict(GREECE_TZ) for i in data.tomorrow],
         "tomorrow_valid": bool(data.tomorrow),
         "today_average": round(stats.average, 5) if stats else None,
+        "wholesale_multiplier": data.settings.wholesale_multiplier,
         "supplier_margin": data.settings.supplier_margin,
         "other_charges": data.settings.other_charges,
         "vat_percent": data.settings.vat_percent,
+        "hourly_prices": data.hourly,
         "last_fetch": data.fetched_at.isoformat(),
+        **_profile_attrs(data),
+    }
+
+
+def _profile_attrs(data: PriceData) -> dict[str, Any]:
+    profile = data.profile
+    if profile is None:
+        return {"supplier_profile": "custom"}
+    return {
+        "supplier_profile": profile.key,
+        "supplier": profile.supplier,
+        "product": profile.product,
+        "monthly_fee": profile.monthly_fee,
+        "profile_source": profile.source,
+        "profile_checked": profile.as_of,
     }
 
 

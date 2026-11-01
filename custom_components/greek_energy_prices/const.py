@@ -18,11 +18,18 @@ CONF_SUPPLIER_MARGIN = "supplier_margin"
 CONF_OTHER_CHARGES = "other_charges"
 CONF_VAT = "vat"
 CONF_CHEAP_HOURS = "cheap_hours"
+CONF_PROFILE = "profile"
+CONF_WHOLESALE_MULTIPLIER = "wholesale_multiplier"
+CONF_HOURLY_PRICES = "hourly_prices"
 
 DEFAULT_SUPPLIER_MARGIN = 0.0  # €/kWh
 DEFAULT_OTHER_CHARGES = 0.0  # €/kWh (network, ΥΚΩ, ΕΤΜΕΑΡ, ΕΦΚ ...)
 DEFAULT_VAT = 6.0  # % – VAT on electricity in Greece
 DEFAULT_CHEAP_HOURS = 4
+DEFAULT_WHOLESALE_MULTIPLIER = 1.0
+# Greek dynamic products price on the hourly ΤΕΑ even though the market
+# clears in 15-minute intervals.
+DEFAULT_HOURLY_PRICES = True
 
 # How often the coordinator runs. The API itself is only queried when the
 # cached data is stale or tomorrow's prices are still missing.

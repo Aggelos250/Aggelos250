@@ -19,9 +19,12 @@ from pytest_homeassistant_custom_component.common import (
 from custom_components.greek_energy_prices.const import (
     CONF_API_KEY,
     CONF_CHEAP_HOURS,
+    CONF_HOURLY_PRICES,
     CONF_OTHER_CHARGES,
+    CONF_PROFILE,
     CONF_SUPPLIER_MARGIN,
     CONF_VAT,
+    CONF_WHOLESALE_MULTIPLIER,
     DOMAIN,
 )
 from custom_components.greek_energy_prices.entsoe import (
@@ -57,31 +60,42 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
+    step1 = {CONF_API_KEY: "token", CONF_PROFILE: "dei_myhome_dynamic"}
 
     with patch(CLIENT, side_effect=EntsoeAuthError):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT
+            result["flow_id"], step1
         )
     assert result["errors"] == {"base": "invalid_auth"}
 
     with patch(CLIENT, side_effect=EntsoeError):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT
+            result["flow_id"], step1
         )
     assert result["errors"] == {"base": "cannot_connect"}
 
-    with (
-        patch(CLIENT, return_value=[]),
-        patch(
-            "custom_components.greek_energy_prices.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(CLIENT, return_value=[]):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], step1
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "tariff"
+    assert "ΔΕΗ" in result["description_placeholders"]["profile"]
+    # The form is pre-filled with the profile's published values.
+    defaults = {str(key): key.default() for key in result["data_schema"].schema}
+    assert defaults[CONF_WHOLESALE_MULTIPLIER] == 1.19
+    assert defaults[CONF_SUPPLIER_MARGIN] == 0.044
+    assert defaults[CONF_HOURLY_PRICES] is True
+
+    with patch(
+        "custom_components.greek_energy_prices.async_setup_entry",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT
+            result["flow_id"], {**defaults, CONF_OTHER_CHARGES: 0.05}
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == USER_INPUT
+    assert result["data"] == {**step1, **defaults, CONF_OTHER_CHARGES: 0.05}
 
 
 @pytest.fixture
@@ -126,23 +140,51 @@ async def test_entities(hass: HomeAssistant, setup_entry, freezer) -> None:
     assert float(state.state) == pytest.approx((0.106 + 0.05) * 1.06)
 
 
-async def test_options_change_prices(hass: HomeAssistant, setup_entry) -> None:
+async def test_options_switch_profile(hass: HomeAssistant, setup_entry) -> None:
     entry, _ = setup_entry
     result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["step_id"] == "init"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_PROFILE: "zenith_power_home_flow"}
+    )
+    assert result["step_id"] == "tariff"
+    defaults = {str(key): key.default() for key in result["data_schema"].schema}
+    assert defaults[CONF_SUPPLIER_MARGIN] == 0.100
+    assert defaults[CONF_WHOLESALE_MULTIPLIER] == 1.2
+    # Non-supplier values are kept from the existing entry.
+    assert defaults[CONF_OTHER_CHARGES] == 0.04
+
     with patch(CLIENT, AsyncMock(return_value=_points(2))):
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {
-                CONF_SUPPLIER_MARGIN: 0.0,
-                CONF_OTHER_CHARGES: 0.0,
-                CONF_VAT: 0.0,
-                CONF_CHEAP_HOURS: 4.0,
-            },
+            result["flow_id"], {**defaults, CONF_OTHER_CHARGES: 0.0, CONF_VAT: 0.0}
         )
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     state = hass.states.get("sensor.greek_electricity_prices_current_price")
-    assert float(state.state) == pytest.approx(0.010)
+    # 03:20 → wholesale 10 €/MWh: 1.2 × 0.010 + 0.100
+    assert float(state.state) == pytest.approx(0.112)
+    assert state.attributes["supplier"] == "ZeniΘ"
+    assert state.attributes["monthly_fee"] == 15.0
+
+
+async def test_options_keep_custom_values(hass: HomeAssistant, setup_entry) -> None:
+    entry, _ = setup_entry
+    hass.config_entries.async_update_entry(
+        entry,
+        options={
+            CONF_PROFILE: "dei_myhome_dynamic",
+            CONF_WHOLESALE_MULTIPLIER: 1.5,
+            CONF_SUPPLIER_MARGIN: 0.05,
+        },
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_PROFILE: "dei_myhome_dynamic"}
+    )
+    defaults = {str(key): key.default() for key in result["data_schema"].schema}
+    assert defaults[CONF_WHOLESALE_MULTIPLIER] == 1.5
+    assert defaults[CONF_SUPPLIER_MARGIN] == 0.05
 
 
 async def test_auth_failure_starts_reauth(hass: HomeAssistant) -> None:

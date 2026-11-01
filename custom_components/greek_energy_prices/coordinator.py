@@ -17,13 +17,18 @@ from homeassistant.util import dt as dt_util
 from .const import (
     CONF_API_KEY,
     CONF_CHEAP_HOURS,
+    CONF_HOURLY_PRICES,
     CONF_OTHER_CHARGES,
+    CONF_PROFILE,
     CONF_SUPPLIER_MARGIN,
     CONF_VAT,
+    CONF_WHOLESALE_MULTIPLIER,
     DEFAULT_CHEAP_HOURS,
+    DEFAULT_HOURLY_PRICES,
     DEFAULT_OTHER_CHARGES,
     DEFAULT_SUPPLIER_MARGIN,
     DEFAULT_VAT,
+    DEFAULT_WHOLESALE_MULTIPLIER,
     DOMAIN,
     GREECE_TZ,
     MAX_DATA_AGE,
@@ -35,9 +40,11 @@ from .entsoe import EntsoeAuthError, EntsoeClient, EntsoeError, PricePoint
 from .pricing import (
     PriceInterval,
     TariffSettings,
+    average_hourly,
     build_intervals,
     intervals_for_day,
 )
+from .tariffs import SupplierProfile, get_profile
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,10 +60,22 @@ class PriceData:
     tomorrow: list[PriceInterval]
     settings: TariffSettings
     cheap_hours: float
+    hourly: bool
+    profile: SupplierProfile | None
     fetched_at: datetime
 
 
-def settings_from_entry(entry: ConfigEntry) -> tuple[TariffSettings, float]:
+@dataclass(frozen=True, slots=True)
+class EntryConfig:
+    """Tariff configuration of a config entry."""
+
+    settings: TariffSettings
+    cheap_hours: float
+    hourly: bool
+    profile: SupplierProfile | None
+
+
+def config_from_entry(entry: ConfigEntry) -> EntryConfig:
     """Read tariff settings (options override initial data)."""
     merged = {**entry.data, **entry.options}
     settings = TariffSettings(
@@ -65,9 +84,16 @@ def settings_from_entry(entry: ConfigEntry) -> tuple[TariffSettings, float]:
         ),
         other_charges=float(merged.get(CONF_OTHER_CHARGES, DEFAULT_OTHER_CHARGES)),
         vat_percent=float(merged.get(CONF_VAT, DEFAULT_VAT)),
+        wholesale_multiplier=float(
+            merged.get(CONF_WHOLESALE_MULTIPLIER, DEFAULT_WHOLESALE_MULTIPLIER)
+        ),
     )
-    cheap_hours = float(merged.get(CONF_CHEAP_HOURS, DEFAULT_CHEAP_HOURS))
-    return settings, cheap_hours
+    return EntryConfig(
+        settings=settings,
+        cheap_hours=float(merged.get(CONF_CHEAP_HOURS, DEFAULT_CHEAP_HOURS)),
+        hourly=bool(merged.get(CONF_HOURLY_PRICES, DEFAULT_HOURLY_PRICES)),
+        profile=get_profile(merged.get(CONF_PROFILE)),
+    )
 
 
 class GreekEnergyCoordinator(DataUpdateCoordinator[PriceData]):
@@ -138,15 +164,19 @@ class GreekEnergyCoordinator(DataUpdateCoordinator[PriceData]):
         return build_intervals(self._points, TariffSettings())
 
     def _build(self, points: list[PricePoint]) -> PriceData:
-        settings, cheap_hours = settings_from_entry(self.config_entry)
-        intervals = build_intervals(points, settings)
+        config = config_from_entry(self.config_entry)
+        if config.hourly:
+            points = average_hourly(points)
+        intervals = build_intervals(points, config.settings)
         today = dt_util.utcnow().astimezone(GREECE_TZ).date()
         return PriceData(
             intervals=intervals,
             today=intervals_for_day(intervals, today, GREECE_TZ),
             tomorrow=intervals_for_day(intervals, today + timedelta(days=1), GREECE_TZ),
-            settings=settings,
-            cheap_hours=cheap_hours,
+            settings=config.settings,
+            cheap_hours=config.cheap_hours,
+            hourly=config.hourly,
+            profile=config.profile,
             fetched_at=self._fetched_at or dt_util.utcnow(),
         )
 
