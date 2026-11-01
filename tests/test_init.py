@@ -164,6 +164,9 @@ async def test_options_switch_profile(hass: HomeAssistant, setup_entry) -> None:
     # 03:20 → wholesale 10 €/MWh: 1.2 × 0.010 + 0.100
     assert float(state.state) == pytest.approx(0.112)
     assert state.attributes["supplier"] == "ZeniΘ"
+    supply = hass.states.get("sensor.greek_electricity_prices_current_supply_price")
+    assert float(supply.state) == pytest.approx(0.112)
+    assert state.attributes["today"][3]["supply"] == pytest.approx(0.112)
     assert state.attributes["monthly_fee"] == 15.0
 
 

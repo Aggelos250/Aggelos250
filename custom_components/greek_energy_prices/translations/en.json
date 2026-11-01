@@ -114,6 +114,9 @@
       },
       "cheapest_window_start": {
         "name": "Cheapest window start"
+      },
+      "current_supply_price": {
+        "name": "Current supply price"
       }
     },
     "binary_sensor": {

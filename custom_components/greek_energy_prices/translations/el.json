@@ -114,6 +114,9 @@
       },
       "cheapest_window_start": {
         "name": "Έναρξη φθηνότερου παραθύρου"
+      },
+      "current_supply_price": {
+        "name": "Τρέχουσα τιμή προμήθειας"
       }
     },
     "binary_sensor": {

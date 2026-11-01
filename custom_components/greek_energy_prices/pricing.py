@@ -40,6 +40,7 @@ class PriceInterval:
     end: datetime
     wholesale: float
     retail: float
+    supply: float = 0.0  # supplier energy price B × ΤΕΑ + A, excl. VAT
 
     def as_dict(self, tz: ZoneInfo) -> dict[str, object]:
         """Serialisable form for state attributes."""
@@ -47,6 +48,7 @@ class PriceInterval:
             "start": self.start.astimezone(tz).isoformat(),
             "end": self.end.astimezone(tz).isoformat(),
             "price": round(self.retail, 5),
+            "supply": round(self.supply, 5),
             "wholesale": round(self.wholesale, 5),
         }
 
@@ -82,6 +84,7 @@ def build_intervals(
             end=p.end,
             wholesale=p.price_eur_kwh,
             retail=settings.retail(p.price_eur_kwh),
+            supply=settings.supply(p.price_eur_kwh),
         )
         for p in points
     ]

@@ -43,6 +43,11 @@ def _current_wholesale(data: PriceData, now: datetime) -> float | None:
     return interval.wholesale if interval else None
 
 
+def _current_supply(data: PriceData, now: datetime) -> float | None:
+    interval = interval_at(data.intervals, now)
+    return interval.supply if interval else None
+
+
 def _next(data: PriceData, now: datetime) -> float | None:
     interval = next_interval(data.intervals, now)
     return interval.retail if interval else None
@@ -131,6 +136,12 @@ SENSORS: tuple[GreekEnergySensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_current_wholesale,
         entity_registry_enabled_default=False,
+        **_PRICE,
+    ),
+    GreekEnergySensorDescription(
+        key="current_supply_price",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_current_supply,
         **_PRICE,
     ),
     GreekEnergySensorDescription(

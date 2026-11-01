@@ -9,6 +9,7 @@ Custom integration για Home Assistant με τις **τιμές ρεύματο
 | Οντότητα | Περιγραφή |
 |---|---|
 | `sensor.…_current_price` | Τρέχουσα τελική τιμή (€/kWh). Τα attributes `today` / `tomorrow` έχουν όλες τις τιμές της μέρας, για γραφήματα (π.χ. ApexCharts) |
+| `sensor.…_current_supply_price` | Τιμή προμήθειας του παρόχου (Β × ΤΕΑ + Α), χωρίς ρυθμιζόμενες και ΦΠΑ. Για σύγκριση με τα εργαλεία των παρόχων |
 | `sensor.…_current_wholesale_price` | Χονδρική τιμή (€/kWh), απενεργοποιημένη από προεπιλογή |
 | `sensor.…_next_interval_price` | Τιμή επόμενου διαστήματος |
 | `sensor.…_today_average/lowest/highest_price` | Στατιστικά ημέρας |
