@@ -1,0 +1,108 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Greek electricity prices",
+        "description": "Day-ahead prices for Greece from the ENTSO-E Transparency Platform. Request a free API token at transparency.entsoe.eu (My Account Settings → Web API Security Token).",
+        "data": {
+          "api_key": "ENTSO-E API token",
+          "supplier_margin": "Supplier margin",
+          "other_charges": "Other charges",
+          "vat": "VAT",
+          "cheap_hours": "Cheap hours"
+        },
+        "data_description": {
+          "supplier_margin": "Your supplier's margin on top of the wholesale price (€/kWh), as stated in your contract.",
+          "other_charges": "Regulated per-kWh charges (network, ΥΚΩ, ΕΤΜΕΑΡ, ΕΦΚ, ...) from your bill.",
+          "vat": "VAT percentage (6% for electricity in Greece).",
+          "cheap_hours": "How many hours count as cheap, and the length of the cheapest contiguous window."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Greek electricity prices",
+        "description": "The ENTSO-E token was rejected. Enter a new one.",
+        "data": {
+          "api_key": "ENTSO-E API token"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid ENTSO-E token.",
+      "cannot_connect": "Could not connect to ENTSO-E."
+    },
+    "abort": {
+      "already_configured": "Already configured.",
+      "single_instance_allowed": "Already configured.",
+      "reauth_successful": "Token updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Tariff settings",
+        "data": {
+          "supplier_margin": "Supplier margin",
+          "other_charges": "Other charges",
+          "vat": "VAT",
+          "cheap_hours": "Cheap hours"
+        },
+        "data_description": {
+          "supplier_margin": "Your supplier's margin on top of the wholesale price (€/kWh), as stated in your contract.",
+          "other_charges": "Regulated per-kWh charges (network, ΥΚΩ, ΕΤΜΕΑΡ, ΕΦΚ, ...) from your bill.",
+          "vat": "VAT percentage (6% for electricity in Greece).",
+          "cheap_hours": "How many hours count as cheap, and the length of the cheapest contiguous window."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_price": {
+        "name": "Current price"
+      },
+      "current_wholesale_price": {
+        "name": "Current wholesale price"
+      },
+      "next_price": {
+        "name": "Next interval price"
+      },
+      "today_average": {
+        "name": "Today average price"
+      },
+      "today_min": {
+        "name": "Today lowest price"
+      },
+      "today_max": {
+        "name": "Today highest price"
+      },
+      "tomorrow_average": {
+        "name": "Tomorrow average price"
+      },
+      "today_cheapest_time": {
+        "name": "Today cheapest time"
+      },
+      "today_most_expensive_time": {
+        "name": "Today most expensive time"
+      },
+      "cheapest_window_start": {
+        "name": "Cheapest window start"
+      }
+    },
+    "binary_sensor": {
+      "cheap_now": {
+        "name": "Cheap hour now"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Invalid ENTSO-E token."
+    },
+    "update_failed": {
+      "message": "Error fetching prices from ENTSO-E: {error}"
+    },
+    "no_data": {
+      "message": "ENTSO-E returned no prices for Greece."
+    }
+  }
+}

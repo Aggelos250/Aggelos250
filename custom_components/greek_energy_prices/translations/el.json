@@ -1,0 +1,108 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Τιμές ρεύματος Ελλάδας",
+        "description": "Τιμές Αγοράς Επόμενης Ημέρας για την Ελλάδα από την πλατφόρμα ENTSO-E. Πάρτε δωρεάν token στο transparency.entsoe.eu (My Account Settings → Web API Security Token).",
+        "data": {
+          "api_key": "ENTSO-E API token",
+          "supplier_margin": "Χρέωση προμηθευτή",
+          "other_charges": "Λοιπές χρεώσεις",
+          "vat": "ΦΠΑ",
+          "cheap_hours": "Φθηνές ώρες"
+        },
+        "data_description": {
+          "supplier_margin": "Περιθώριο/προμήθεια του παρόχου πάνω στη χονδρική τιμή (€/kWh), όπως αναγράφεται στο συμβόλαιο.",
+          "other_charges": "Ρυθμιζόμενες χρεώσεις ανά kWh (δίκτυο, ΥΚΩ, ΕΤΜΕΑΡ, ΕΦΚ κ.λπ.) από τον λογαριασμό σας.",
+          "vat": "Ποσοστό ΦΠΑ (6% για ρεύμα στην Ελλάδα).",
+          "cheap_hours": "Πόσες ώρες θεωρούνται «φθηνές» και διάρκεια του φθηνότερου συνεχόμενου παραθύρου."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Τιμές ρεύματος Ελλάδας",
+        "description": "Το token του ENTSO-E απορρίφθηκε. Βάλτε νέο.",
+        "data": {
+          "api_key": "ENTSO-E API token"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Μη έγκυρο token ENTSO-E.",
+      "cannot_connect": "Αδυναμία σύνδεσης με ENTSO-E."
+    },
+    "abort": {
+      "already_configured": "Έχει ήδη ρυθμιστεί.",
+      "single_instance_allowed": "Έχει ήδη ρυθμιστεί.",
+      "reauth_successful": "Το token ενημερώθηκε."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ρυθμίσεις τιμολογίου",
+        "data": {
+          "supplier_margin": "Χρέωση προμηθευτή",
+          "other_charges": "Λοιπές χρεώσεις",
+          "vat": "ΦΠΑ",
+          "cheap_hours": "Φθηνές ώρες"
+        },
+        "data_description": {
+          "supplier_margin": "Περιθώριο/προμήθεια του παρόχου πάνω στη χονδρική τιμή (€/kWh), όπως αναγράφεται στο συμβόλαιο.",
+          "other_charges": "Ρυθμιζόμενες χρεώσεις ανά kWh (δίκτυο, ΥΚΩ, ΕΤΜΕΑΡ, ΕΦΚ κ.λπ.) από τον λογαριασμό σας.",
+          "vat": "Ποσοστό ΦΠΑ (6% για ρεύμα στην Ελλάδα).",
+          "cheap_hours": "Πόσες ώρες θεωρούνται «φθηνές» και διάρκεια του φθηνότερου συνεχόμενου παραθύρου."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_price": {
+        "name": "Τρέχουσα τιμή"
+      },
+      "current_wholesale_price": {
+        "name": "Τρέχουσα χονδρική τιμή"
+      },
+      "next_price": {
+        "name": "Τιμή επόμενου διαστήματος"
+      },
+      "today_average": {
+        "name": "Μέση τιμή σήμερα"
+      },
+      "today_min": {
+        "name": "Χαμηλότερη τιμή σήμερα"
+      },
+      "today_max": {
+        "name": "Υψηλότερη τιμή σήμερα"
+      },
+      "tomorrow_average": {
+        "name": "Μέση τιμή αύριο"
+      },
+      "today_cheapest_time": {
+        "name": "Φθηνότερη ώρα σήμερα"
+      },
+      "today_most_expensive_time": {
+        "name": "Ακριβότερη ώρα σήμερα"
+      },
+      "cheapest_window_start": {
+        "name": "Έναρξη φθηνότερου παραθύρου"
+      }
+    },
+    "binary_sensor": {
+      "cheap_now": {
+        "name": "Φθηνή ώρα τώρα"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Μη έγκυρο token ENTSO-E."
+    },
+    "update_failed": {
+      "message": "Σφάλμα λήψης τιμών από ENTSO-E: {error}"
+    },
+    "no_data": {
+      "message": "Το ENTSO-E δεν επέστρεψε τιμές για την Ελλάδα."
+    }
+  }
+}
