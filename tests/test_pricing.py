@@ -16,6 +16,7 @@ from custom_components.greek_energy_prices.pricing import (
     day_stats,
     interval_at,
     intervals_for_day,
+    is_day_complete,
     next_interval,
 )
 
@@ -28,6 +29,27 @@ def _hourly(prices_mwh: list[float], start: datetime = START):
         for i, p in enumerate(prices_mwh)
     ]
     return build_intervals(points, TariffSettings(vat_percent=0))
+
+
+def test_is_day_complete() -> None:
+    day = date(2026, 11, 1)
+    next_day = date(2026, 11, 2)
+    # A published market day ends at 01:00 Athens the following day.
+    intervals = _hourly([100.0] * 25)
+    assert is_day_complete(intervals, day, GREECE_TZ)
+    assert not is_day_complete(intervals, next_day, GREECE_TZ)
+    assert not is_day_complete([], day, GREECE_TZ)
+    # A hole in the day or a late start is not complete either.
+    assert not is_day_complete(intervals[:5] + intervals[6:], day, GREECE_TZ)
+    assert not is_day_complete(intervals[1:], day, GREECE_TZ)
+
+
+def test_is_day_complete_on_dst_change() -> None:
+    # 2026-10-25 lasts 25 hours in Athens (starts 21:00 UTC on the 24th).
+    start = datetime(2026, 10, 24, 21, 0, tzinfo=UTC)
+    day = date(2026, 10, 25)
+    assert is_day_complete(_hourly([100.0] * 25, start), day, GREECE_TZ)
+    assert not is_day_complete(_hourly([100.0] * 24, start), day, GREECE_TZ)
 
 
 def test_retail_formula() -> None:

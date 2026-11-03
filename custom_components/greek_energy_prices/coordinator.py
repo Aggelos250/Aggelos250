@@ -43,6 +43,7 @@ from .pricing import (
     average_hourly,
     build_intervals,
     intervals_for_day,
+    is_day_complete,
 )
 from .tariffs import SupplierProfile, get_profile
 
@@ -148,7 +149,7 @@ class GreekEnergyCoordinator(DataUpdateCoordinator[PriceData]):
         if now - self._fetched_at > MAX_DATA_AGE:
             return True
         tomorrow = today + timedelta(days=1)
-        has_tomorrow = bool(intervals_for_day(self._build_raw(), tomorrow, GREECE_TZ))
+        has_tomorrow = is_day_complete(self._build_raw(), tomorrow, GREECE_TZ)
         if (
             not has_tomorrow
             and local_now.hour >= TOMORROW_AVAILABLE_HOUR
@@ -169,10 +170,15 @@ class GreekEnergyCoordinator(DataUpdateCoordinator[PriceData]):
             points = average_hourly(points)
         intervals = build_intervals(points, config.settings)
         today = dt_util.utcnow().astimezone(GREECE_TZ).date()
+        tomorrow = today + timedelta(days=1)
         return PriceData(
             intervals=intervals,
             today=intervals_for_day(intervals, today, GREECE_TZ),
-            tomorrow=intervals_for_day(intervals, today + timedelta(days=1), GREECE_TZ),
+            tomorrow=(
+                intervals_for_day(intervals, tomorrow, GREECE_TZ)
+                if is_day_complete(intervals, tomorrow, GREECE_TZ)
+                else []
+            ),
             settings=config.settings,
             cheap_hours=config.cheap_hours,
             hourly=config.hourly,

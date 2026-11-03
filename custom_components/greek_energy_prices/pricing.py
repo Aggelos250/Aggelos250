@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from statistics import fmean
 from zoneinfo import ZoneInfo
 
@@ -95,6 +95,22 @@ def intervals_for_day(
 ) -> list[PriceInterval]:
     """Intervals whose start falls on the given local calendar day."""
     return [i for i in intervals if i.start.astimezone(tz).date() == day]
+
+
+def is_day_complete(intervals: list[PriceInterval], day: date, tz: ZoneInfo) -> bool:
+    """Whether contiguous intervals cover the whole local calendar day.
+
+    The market day runs 00:00–24:00 CET, so a published day always spills one
+    hour into the next Athens day. That hour alone must not count as that day.
+    """
+    members = sorted(intervals_for_day(intervals, day, tz), key=lambda i: i.start)
+    if not members:
+        return False
+    day_start = datetime.combine(day, time.min, tzinfo=tz)
+    day_end = datetime.combine(day + timedelta(days=1), time.min, tzinfo=tz)
+    if members[0].start != day_start or members[-1].end != day_end:
+        return False
+    return all(a.end == b.start for a, b in zip(members, members[1:], strict=False))
 
 
 def interval_at(

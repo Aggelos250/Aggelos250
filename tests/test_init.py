@@ -140,6 +140,37 @@ async def test_entities(hass: HomeAssistant, setup_entry, freezer) -> None:
     assert float(state.state) == pytest.approx((0.106 + 0.05) * 1.06)
 
 
+async def test_partial_tomorrow_ignored_and_refetched(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    current = "sensor.greek_electricity_prices_current_price"
+    average = "sensor.greek_electricity_prices_tomorrow_average_price"
+    freezer.move_to(TODAY_START + timedelta(hours=10))  # 10:00 Athens
+    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, unique_id=DOMAIN)
+    entry.add_to_hass(hass)
+    # Today plus the one hour of tomorrow that the market day spills into.
+    mock = AsyncMock(return_value=_points(2)[:25])
+    with patch(CLIENT, mock):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        state = hass.states.get(current)
+        assert state.attributes["tomorrow"] == []
+        assert state.attributes["tomorrow_valid"] is False
+        assert hass.states.get(average).state == "unknown"
+        assert mock.await_count == 1
+
+        # At 13:05 Athens tomorrow is fetched, well before the data gets stale.
+        mock.return_value = _points(2)
+        freezer.move_to(TODAY_START + timedelta(hours=13, minutes=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock.await_count == 2
+        state = hass.states.get(current)
+        assert len(state.attributes["tomorrow"]) == 24
+        assert state.attributes["tomorrow_valid"] is True
+        assert hass.states.get(average).state != "unknown"
+
+
 async def test_options_switch_profile(hass: HomeAssistant, setup_entry) -> None:
     entry, _ = setup_entry
     result = await hass.config_entries.options.async_init(entry.entry_id)
