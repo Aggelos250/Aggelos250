@@ -126,7 +126,10 @@ class GreekEnergyCoordinator(DataUpdateCoordinator[PriceData]):
         @callback
         def _tick(_now: datetime) -> None:
             if self.data is not None:
-                self.async_set_updated_data(self._build(self._points))
+                # Not async_set_updated_data: it restarts the refresh timer, and
+                # ticks as frequent as UPDATE_INTERVAL would postpone it forever.
+                self.data = self._build(self._points)
+                self.async_update_listeners()
 
         self._unsub_tick = async_track_utc_time_change(
             self.hass, _tick, minute=[0, 15, 30, 45], second=1
